@@ -1,6 +1,7 @@
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -16,14 +17,14 @@ public class InterviewAppTest {
     WebDriver driver;
 
     @BeforeMethod
-    public void setUp(){
+    public void setUp() {
         WebDriverManager.chromedriver().setup();
         driver = new ChromeDriver();
         driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
         driver.manage().window().maximize();
     }
 
-    @Test (testName = "IN-1 pageTitle", description = "Title of page should be \"Interview App\"")
+    @Test(testName = "IN-1 pageTitle", description = "Title of page should be \"Interview App\"")
     public void TestPageTitle() {
         driver.get("https://interview-prep-test.herokuapp.com/");
         //username
@@ -34,10 +35,11 @@ public class InterviewAppTest {
         driver.findElement(By.xpath("//button[@type='submit']")).click();
 
         String expectedResult = "Interview App";
-        Assert.assertEquals(driver.getTitle(),expectedResult);
+        Assert.assertEquals(driver.getTitle(), expectedResult);
     }
-    @Test (testName = "IN-2 userAccess", description = "As a user, I should be able to see only \"Sign out\" button from nav bar. User should not have access to \"Manage Access\" button")
-    public void TestUserAccess(){
+
+    @Test(testName = "IN-2 userAccess", description = "As a user, I should be able to see only \"Sign out\" button from nav bar. User should not have access to \"Manage Access\" button")
+    public void TestUserAccess() {
         driver.get("https://interview-prep-test.herokuapp.com/");
         //username
         driver.findElement(By.name("email")).sendKeys("test@yahoo.com");
@@ -46,15 +48,16 @@ public class InterviewAppTest {
         //login button
         driver.findElement(By.xpath("//button[@type='submit']")).click();
 
-       WebElement signOutBtn = driver.findElement(By.xpath("//u[text()='Sign out']"));
+        WebElement signOutBtn = driver.findElement(By.xpath("//u[text()='Sign out']"));
         Assert.assertEquals(signOutBtn.isDisplayed(), true);
 
         //Manage Access is not displayed
 
 
     }
-    @Test (testName = "IN-3 Default dashboards", description = "As a user, there should always be 3 dashboards present: All Topics, Coding, Soft Skills")
-    public void TestDefaultDashboards(){
+
+    @Test(testName = "IN-3 Default dashboards", description = "As a user, there should always be 3 dashboards present: All Topics, Coding, Soft Skills")
+    public void TestDefaultDashboards() {
         driver.get("https://interview-prep-test.herokuapp.com/");
         //username
         driver.findElement(By.name("email")).sendKeys("test@yahoo.com");
@@ -71,7 +74,8 @@ public class InterviewAppTest {
         Assert.assertEquals(codingDashboard.isDisplayed(), true);
         Assert.assertEquals(softSkillsDashboard.isDisplayed(), true);
     }
-    @Test (testName = "IN-4 InterviewRelatedStatements",description = "As a user I should have an option to add a statement in Do's and Dont's sections. Statements should take only letters and numbers.")
+
+    @Test(testName = "IN-4 InterviewRelatedStatements", description = "As a user I should have an option to add a statement in Do's and Dont's sections. Statements should take only letters and numbers.")
     public void InterviewRelatedStatements() throws InterruptedException {
         driver.get("https://interview-prep-test.herokuapp.com/");
         //username
@@ -93,8 +97,93 @@ public class InterviewAppTest {
 
         Thread.sleep(3000);
     }
+
+    @Test(testName = "in-8 searchOption", description = "I would like an option to search for certain question based on any given word as a criteria")
+    public void testSearchOption() {
+        driver.get("https://interview-prep-test.herokuapp.com/");
+        //username
+        driver.findElement(By.name("email")).sendKeys("test@yahoo.com");
+        //password
+        driver.findElement(By.name("password")).sendKeys("test123");
+        //login button
+        driver.findElement(By.xpath("//button[@type='submit']")).click();
+
+        //Click on "Coding" dashboard
+        driver.findElement(By.xpath("//*[text()='Coding']")).click();
+        //Verify you are on the "Coding" page
+        Assert.assertEquals(driver.findElement(By.xpath("//div[@class='row dash-header']/h1")).getText(), "Coding");
+        //click Enter new Question
+        driver.findElement(By.xpath("//button[text()='Enter new question ']")).click();
+        // input a new question in "Your Question" field
+        driver.findElement(By.xpath("//textarea[@class='form-control']")).sendKeys("Why nine is afraid of seven because seven ate nine");
+        //click "Enter" button
+        driver.findElement(By.xpath("//button[text()='Enter']")).click();
+        //Go back to the previous page by clicking TechLead Logo
+        driver.findElement(By.xpath("//*[@class='logo']")).click();
+
+
+        //Click "Soft skills" dashboards
+        driver.findElement(By.xpath("//*[text()='Soft skills']")).click();
+        //Verify you are on the "Soft Skills" page
+        Assert.assertEquals(driver.findElement(By.xpath("//div[@class='row dash-header']/h1")).getText(), "Softskill");
+        //click Enter new Question
+        driver.findElement(By.xpath("//button[text()='Enter new question ']")).click();
+        // input a new question in "Your Question" field
+        driver.findElement(By.xpath("//input[@class='form-control']")).sendKeys("seven ate nine");
+        //click "Enter" button
+        driver.findElement(By.xpath("//button[text()='Enter']")).click();
+        //Go back to the previous page by clicking TechLead Logo
+        driver.findElement(By.xpath("//*[@class='logo']")).click();
+
+
+        //click on "All Topics" dashboard
+        driver.findElement(By.xpath("//*[text()='All Topics']")).click();
+        //Verify you are on the "All Topics" page
+        Assert.assertEquals(driver.findElement(By.xpath("//div[@class='row dash-header']/h1")).getText(), "All Topics");
+        //Grab All options displayed before inputting search criteria
+        List<WebElement> optionsBeforeEnteringCriteria = driver.findElements(By.xpath("//div[@class='col-md-8']"));
+        // input search criteria in "Search" field
+        driver.findElement(By.xpath("//input[@class='form-control m-2']")).sendKeys("seven");
+        //press search button
+        driver.findElement(By.xpath("//button[@class='btn btn-primary']")).click();
+        // Verify list has correct results based on the given criteria
+        List<WebElement> optionsAfterEnteringCriteria = driver.findElements(By.xpath("//div[@class='col-md-8']"));
+        for (WebElement each : optionsAfterEnteringCriteria) {
+            try {
+                Assert.assertTrue(each.getText().contains("seven"));
+            } catch (StaleElementReferenceException e) {
+            }
+        }
+        //Verify that "Show all" btn brings back all questions to view removing the filter that was applied before
+        driver.findElement(By.xpath("//*[text()='Show all']")).click();
+        List<WebElement> optionsAfterClickingShowAllBtn = driver.findElements(By.xpath("//div[@class='col-md-8']"));
+        for (int i = 0; i < optionsBeforeEnteringCriteria.size(); i++) {
+            try {
+
+                Assert.assertEquals(optionsBeforeEnteringCriteria.get(i).getText(), optionsAfterClickingShowAllBtn.get(i).getText());
+            } catch (StaleElementReferenceException e) {
+            }
+        }
+
+        //Negative scenario search criteria can't be more 40 characters
+        driver.findElement(By.xpath("//input[@class='form-control m-2']")).sendKeys("Why nine is afraid of seven because seven");
+        //press search button
+        driver.findElement(By.xpath("//button[@class='btn btn-primary']")).click();
+        // Verify list doesn't show any results with the given criteria
+        List<WebElement> negativeScenario = driver.findElements(By.xpath("//div[@class='col-md-8']"));
+        for (WebElement each : negativeScenario) {
+            try {
+                Assert.assertFalse(each.getText().contains("Why nine is afraid of seven because seven"));
+            } catch (StaleElementReferenceException e) {
+            }
+        }
+
+    }
+
+
     @AfterMethod
-    public void tearDown(){
+    public void tearDown() {
         driver.close();
     }
+
 }

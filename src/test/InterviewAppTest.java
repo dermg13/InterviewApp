@@ -5,6 +5,8 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -15,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 public class InterviewAppTest {
     WebDriver driver;
+    WebDriverWait wait;
 
     @BeforeMethod
     public void setUp() {
@@ -41,9 +44,6 @@ public class InterviewAppTest {
     public void TestUserAccess() {
         WebElement signOutBtn = driver.findElement(By.xpath("//u[text()='Sign out']"));
         Assert.assertEquals(signOutBtn.isDisplayed(), true);
-
-        //Manage Access is not displayed
-
 
     }
 
@@ -75,6 +75,7 @@ public class InterviewAppTest {
 
     @Test(testName = "in-8 searchOption", description = "I would like an option to search for certain question based on any given word as a criteria")
     public void testSearchOption() {
+        wait = new WebDriverWait(driver, 20);
         //Click on "Coding" dashboard
         driver.findElement(By.xpath("//*[text()='Coding']")).click();
         //Verify you are on the "Coding" page
@@ -85,8 +86,11 @@ public class InterviewAppTest {
         driver.findElement(By.xpath("//textarea[@class='form-control']")).sendKeys("Why nine is afraid of seven because seven ate nine");
         //click "Enter" button
         driver.findElement(By.xpath("//button[text()='Enter']")).click();
-        //Go back to the previous page by clicking TechLead Logo
-        driver.findElement(By.xpath("//*[@class='logo']")).click();
+        //verify user input was added
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='col-md-8']")));
+        Assert.assertEquals(driver.findElement(By.xpath("//div[@class='col-md-8']")).getText(), "Why nine is afraid of seven because seven ate nine");
+        //Go back to the previous page
+        driver.navigate().back();
 
 
         //Click "Soft skills" dashboards
@@ -99,9 +103,11 @@ public class InterviewAppTest {
         driver.findElement(By.xpath("//input[@class='form-control']")).sendKeys("seven ate nine");
         //click "Enter" button
         driver.findElement(By.xpath("//button[text()='Enter']")).click();
-        //Go back to the previous page by clicking TechLead Logo
-        driver.findElement(By.xpath("//*[@class='logo']")).click();
-
+        //verify user input was added
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='col-md-8']")));
+        Assert.assertEquals(driver.findElement(By.xpath("//div[@class='col-md-8']")).getText(), "seven ate nine");
+        //Go back to the previous page
+        driver.navigate().back();
 
         //click on "All Topics" dashboard
         driver.findElement(By.xpath("//*[text()='All Topics']")).click();
@@ -113,20 +119,20 @@ public class InterviewAppTest {
         driver.findElement(By.xpath("//input[@class='form-control m-2']")).sendKeys("seven");
         //press search button
         driver.findElement(By.xpath("//button[@class='btn btn-primary']")).click();
+
         // Verify list has correct results based on the given criteria
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='col-md-8']")));
         List<WebElement> optionsAfterEnteringCriteria = driver.findElements(By.xpath("//div[@class='col-md-8']"));
         for (WebElement each : optionsAfterEnteringCriteria) {
-            try {
-                Assert.assertTrue(each.getText().contains("seven"));
-            } catch (StaleElementReferenceException e) {
-            }
+            Assert.assertTrue(each.getText().contains("seven"));
         }
+
         //Verify that "Show all" btn brings back all questions to view removing the filter that was applied before
         driver.findElement(By.xpath("//*[text()='Show all']")).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='col-md-8']")));
         List<WebElement> optionsAfterClickingShowAllBtn = driver.findElements(By.xpath("//div[@class='col-md-8']"));
         for (int i = 0; i < optionsBeforeEnteringCriteria.size(); i++) {
             try {
-
                 Assert.assertEquals(optionsBeforeEnteringCriteria.get(i).getText(), optionsAfterClickingShowAllBtn.get(i).getText());
             } catch (StaleElementReferenceException e) {
             }
@@ -137,16 +143,12 @@ public class InterviewAppTest {
         //press search button
         driver.findElement(By.xpath("//button[@class='btn btn-primary']")).click();
         // Verify list doesn't show any results with the given criteria
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='col-md-8']")));
         List<WebElement> negativeScenario = driver.findElements(By.xpath("//div[@class='col-md-8']"));
         for (WebElement each : negativeScenario) {
-            try {
-                Assert.assertFalse(each.getText().contains("Why nine is afraid of seven because seven"));
-            } catch (StaleElementReferenceException e) {
-            }
+            Assert.assertFalse(each.getText().contains("Why nine is afraid of seven because seven"));
         }
-
     }
-
 
     @AfterMethod
     public void tearDown() {
